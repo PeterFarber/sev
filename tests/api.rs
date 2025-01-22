@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(all(feature = "sev", target_os = "linux"))]
+#[cfg(all(feature = "sev"))]
 
 mod sev {
     #[cfg(feature = "dangerous_hw_tests")]
@@ -114,7 +114,7 @@ mod sev {
     }
 }
 
-#[cfg(all(feature = "snp", target_os = "linux"))]
+#[cfg(all(feature = "snp"))]
 mod snp {
     use serial_test::serial;
     use sev::firmware::host::{Config, Firmware, MaskId, SnpPlatformStatus, TcbVersion};

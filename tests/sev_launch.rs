@@ -2,7 +2,7 @@
 
 #![cfg(all(
     feature = "openssl",
-    target_os = "linux",
+    // target_os = "linux",
     feature = "sev",
     feature = "dangerous_hw_tests"
 ))]

@@ -6,7 +6,7 @@
 //! AMD Secure Processor for purposes of attestation as well as abstractions
 //! for navigating the AMD SEV launch process for a virtual machine.
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 #[cfg(any(feature = "sev", feature = "snp"))]
 mod linux;
 

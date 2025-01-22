@@ -6,9 +6,9 @@
 
 use crate::error::{FirmwareError, SevError};
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use crate::launch::linux::ioctl::*;
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use crate::launch::linux::{sev::*, shared::*};
 use crate::*;
 

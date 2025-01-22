@@ -13,7 +13,7 @@ use std::io::{Error, ErrorKind, Result};
 
 use openssl::*;
 
-use rand::RngCore;
+use ::rand::{thread_rng, RngCore};
 
 /// Represents a brand-new secure channel with the AMD SP.
 pub struct Initialized;
@@ -105,8 +105,8 @@ impl Session<Initialized> {
         let mut nonce = [0u8; 16];
         let mut iv = [0u8; 16];
 
-        rand::thread_rng().fill_bytes(&mut nonce);
-        rand::thread_rng().fill_bytes(&mut iv);
+        thread_rng().fill_bytes(&mut nonce);
+        thread_rng().fill_bytes(&mut iv);
 
         Ok(launch::sev::Start {
             policy: self.policy,
@@ -127,8 +127,8 @@ impl Session<Initialized> {
         let mut nonce = [0u8; 16];
         let mut iv = [0u8; 16];
 
-        rand::thread_rng().fill_bytes(&mut nonce);
-        rand::thread_rng().fill_bytes(&mut iv);
+        thread_rng().fill_bytes(&mut nonce);
+        thread_rng().fill_bytes(&mut iv);
 
         Ok(launch::sev::Start {
             policy: self.policy,
@@ -247,7 +247,7 @@ impl Session<Verified> {
     ) -> std::result::Result<launch::sev::Secret, SessionError> {
         // Generate a random initialization vector (IV)
         let mut iv = [0u8; 16];
-        rand::thread_rng().fill_bytes(&mut iv);
+        thread_rng().fill_bytes(&mut iv);
 
         // Encrypt the data using AES-128-CTR with the generated IV
         let ciphertext = symm::encrypt(symm::Cipher::aes_128_ctr(), &self.tek, Some(&iv), data)?;

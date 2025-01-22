@@ -44,8 +44,7 @@ sev = []
 snp = []
 crypto_nossl = ["dep:p384", "dep:rsa", "dep:sha2", "dep:x509-cert"]
 
-[target.'cfg(target_os = "linux")'.dependencies]
-iocuddle = "0.1"
+#[target.'cfg(target_os = "linux")'.dependencies]
 
 [dependencies]
 openssl = { version = "0.10", optional = true }
@@ -71,10 +70,12 @@ base64 = "0.22.1"
 rand = "0.8"
 reqwest = { version="0.11.10", features = ["blocking"], optional = true }
 tokio = {version = "1.29.1", features =["rt-multi-thread"], optional = true }
+iocuddle = "0.1"
 
-[target.'cfg(target_os = "linux")'.dev-dependencies]
-kvm-ioctls = ">=0.16"
+#[target.'cfg(target_os = "linux")'.dev-dependencies]
+
 
 [dev-dependencies]
 kvm-bindings = ">=0.9.1"
 serial_test = "3.0"
+kvm-ioctls = ">=0.16"

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use crate::error::CertError;
 
 use crate::{error::HashstickError, firmware::host as UAPI};
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use uuid::Uuid;
 
 /// Raw certificate bytes (by pointer or Vec<u8>).
@@ -108,7 +108,7 @@ impl CertTableEntry {
     ///
     /// ```
     ///
-    #[cfg(target_os = "linux")]
+    //#[cfg(target_os = "linux")]
     pub fn uapi_to_vec_bytes(table: &[UAPI::CertTableEntry]) -> Result<Vec<u8>, CertError> {
         // Create the vector to return for later.
         let mut bytes: Vec<u8> = vec![];
@@ -164,7 +164,7 @@ impl CertTableEntry {
     /// };
     /// ```
     ///
-    #[cfg(target_os = "linux")]
+    //#[cfg(target_os = "linux")]
     pub unsafe fn parse_table(
         mut data: *mut CertTableEntry,
     ) -> Result<Vec<UAPI::CertTableEntry>, uuid::Error> {
@@ -372,7 +372,7 @@ mod test {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    //#[cfg(target_os = "linux")]
     mod hashstick {
         use std::convert::TryFrom;
 
@@ -444,7 +444,7 @@ mod test {
         }
     }
 
-    #[cfg(target_os = "linux")]
+    //#[cfg(target_os = "linux")]
     mod cert_table_entry {
 
         use crate::firmware::host as UAPI;

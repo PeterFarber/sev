@@ -2,7 +2,7 @@
 
 #![cfg(feature = "openssl")]
 
-#[cfg(all(target_os = "linux", feature = "snp"))]
+#[cfg(all( feature = "snp"))]
 mod snp_tests {
     use sev::measurement::{
         snp::*,
@@ -363,7 +363,7 @@ mod snp_tests {
     }
 }
 
-#[cfg(all(target_os = "linux", feature = "sev"))]
+#[cfg(all( feature = "sev"))]
 mod sev_tests {
     use sev::measurement::{sev::*, vcpu_types::CpuType};
     // test regular sev-es

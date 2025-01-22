@@ -12,7 +12,7 @@ pub use types::*;
 
 use crate::error::*;
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use crate::firmware::{
     host::CertTableEntry,
     linux::{
@@ -21,7 +21,7 @@ use crate::firmware::{
     },
 };
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use std::fs::{File, OpenOptions};
 
 /// Checks the `fw_err` field on the [GuestRequest](crate::firmware::linux::guest::ioctl::GuestRequest) structure
@@ -42,10 +42,10 @@ fn map_fw_err(raw_error: RawFwError) -> UserApiError {
 }
 
 /// A handle to the SEV-SNP guest device.
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 pub struct Firmware(File);
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 impl Firmware {
     /// Generate a new file handle to the SEV guest platform via `/dev/sev-guest`.
     ///

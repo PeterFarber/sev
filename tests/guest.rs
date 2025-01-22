@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#![cfg(all(feature = "snp", target_os = "linux"))]
+#![cfg(all(feature = "snp"))]
 
 use sev::firmware::guest::*;
 

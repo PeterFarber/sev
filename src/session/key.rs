@@ -10,7 +10,7 @@ use std::{
 
 use openssl::*;
 
-use rand::RngCore;
+use ::rand::{RngCore, thread_rng};
 
 /// A secure key that wipes its memory on drop
 #[repr(transparent)]
@@ -64,7 +64,7 @@ impl Key {
         let mut key = Key::zeroed(size);
 
         // Generate random bytes
-        rand::thread_rng().fill_bytes(&mut key.0);
+        thread_rng().fill_bytes(&mut key.0);
 
         Ok(key)
     }

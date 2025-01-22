@@ -2,7 +2,7 @@
 
 #![cfg(feature = "openssl")]
 
-#[cfg(all(target_os = "linux", feature = "sev"))]
+#[cfg(all( feature = "sev"))]
 mod initialized {
     use ::sev::{certs::sev::builtin::naples::*, certs::sev::*, launch, session::Session};
     use codicon::Decoder;

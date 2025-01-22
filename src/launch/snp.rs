@@ -4,7 +4,7 @@
 //! This ensures (at compile time) that the right steps are called in the
 //! right order.
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use crate::{
     error::FirmwareError,
     firmware::guest::GuestPolicy,

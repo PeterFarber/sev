@@ -1109,11 +1109,3 @@ impl From<ErrorStack> for SessionError {
         Self::OpenSSLStack(value)
     }
 }
-
-// Add a helper function for generating random numbers.
-#[cfg(feature = "openssl")]
-fn generate_random_u64() -> Result<u64, SessionError> {
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    Ok(rng.gen())
-}

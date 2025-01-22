@@ -7,7 +7,7 @@ pub(crate) use crate::firmware::linux::host as FFI;
 
 use crate::Version;
 
-#[cfg(target_os = "linux")]
+//#[cfg(target_os = "linux")]
 use crate::error::CertError;
 
 use std::{
@@ -177,13 +177,13 @@ impl CertTableEntry {
     }
 
     /// Builds a Kernel formatted CertTable for sending the certificate content to the PSP.
-    #[cfg(target_os = "linux")]
+    //#[cfg(target_os = "linux")]
     pub fn cert_table_to_vec_bytes(table: &[Self]) -> Result<Vec<u8>, CertError> {
         FFI::types::CertTableEntry::uapi_to_vec_bytes(table)
     }
 
     /// Takes in bytes in kernel CertTable format and returns in user API CertTable format.
-    #[cfg(target_os = "linux")]
+    //#[cfg(target_os = "linux")]
     pub fn vec_bytes_to_cert_table(bytes: &mut [u8]) -> Result<Vec<Self>, CertError> {
         let cert_bytes_ptr: *mut FFI::types::CertTableEntry =
             bytes.as_mut_ptr() as *mut FFI::types::CertTableEntry;
