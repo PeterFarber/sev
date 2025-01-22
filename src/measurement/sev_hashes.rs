@@ -16,7 +16,8 @@ use uuid::{uuid, Uuid};
 
 use crate::error::*;
 
-type Sha256Hash = [u8; 32];
+/// A SHA-256 hash represented as an array of 32 bytes.
+pub type Sha256Hash = [u8; 32];
 
 /// GUID stored as little endian
 #[derive(Debug, Clone, Copy, Serialize, Default)]
@@ -132,14 +133,29 @@ const SEV_CMDLINE_ENTRY_GUID: Uuid = uuid!("97d02dd8-bd20-4c94-aa78-e7714d36ab2a
 /// Struct containing the 3 possible SEV hashes
 pub struct SevHashes {
     /// Kernel hash
-    kernel_hash: Sha256Hash,
+    pub kernel_hash: Sha256Hash,
     /// Initrd hash
-    initrd_hash: Sha256Hash,
+    pub initrd_hash: Sha256Hash,
     /// Cmdline append hash
-    cmdline_hash: Sha256Hash,
+    pub cmdline_hash: Sha256Hash,
 }
 
 impl SevHashes {
+
+    /// Create `SevHashes` using precomputed hashes for kernel, initrd, and cmdline.
+    pub fn new_with_hashes(
+        kernel_hash: Sha256Hash,
+        initrd_hash: Sha256Hash,
+        cmdline_hash: Sha256Hash,
+    ) -> Result<Self, MeasurementError> {
+        Ok(SevHashes {
+            kernel_hash,
+            initrd_hash,
+            cmdline_hash,
+        })
+    }
+
+
     /// Generate hashes from the user provided kernel, initrd, and cmdline.
     pub fn new(
         kernel: PathBuf,
@@ -172,7 +188,7 @@ impl SevHashes {
 
             None => sha256(b"\x00"),
         };
-
+        
         Ok(SevHashes {
             kernel_hash,
             initrd_hash,

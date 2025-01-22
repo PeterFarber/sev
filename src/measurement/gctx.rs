@@ -28,15 +28,17 @@ fn validate_block_size(length: usize) -> Result<(), GCTXError> {
     }
 }
 
-pub(crate) struct Updating;
-pub(crate) struct Completed;
+/// Represents the state of a guest context that is currently being updated.
+pub struct Updating;
+/// Represents the state of a guest context that has been completed.
+pub struct Completed;
 
 /// Guest context field structure
 pub struct Gctx<T> {
     /// 48 byte Launch Digest
-    ld: SnpLaunchDigest,
+    pub ld: SnpLaunchDigest,
     /// Current GCTX state
-    _state: T,
+    pub _state: T,
 }
 
 /// Default init of GCTX, launch digest of all 0s
@@ -59,7 +61,7 @@ impl Gctx<Updating> {
     }
 
     /// Will update guest context launch digest with provided data from page
-    fn update(&mut self, page_type: u8, gpa: u64, contents: &[u8]) -> Result<(), MeasurementError> {
+    pub fn update(&mut self, page_type: u8, gpa: u64, contents: &[u8]) -> Result<(), MeasurementError> {
         let page_info_len: u16 = 0x70;
         let is_imi: u8 = 0;
         let vmpl3_perms: u8 = 0;
@@ -163,7 +165,7 @@ impl Gctx<Updating> {
     }
 
     /// Change State to Completed
-    pub(crate) fn finished(&self) -> Gctx<Completed> {
+    pub fn finished(&self) -> Gctx<Completed> {
         Gctx {
             ld: self.ld,
             _state: Completed,
@@ -173,7 +175,7 @@ impl Gctx<Updating> {
 
 impl Gctx<Completed> {
     /// Get the launch digest bytes
-    pub(crate) fn ld(&self) -> SnpLaunchDigest {
+    pub fn ld(&self) -> SnpLaunchDigest {
         self.ld
     }
 }

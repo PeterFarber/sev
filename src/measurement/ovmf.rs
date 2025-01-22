@@ -158,6 +158,7 @@ const SEV_ES_RESET_BLOCK_GUID: Uuid = uuid!("00f771de-1a7e-4fcb-890e-68c77e2fb44
 const OVMF_SEV_META_DATA_GUID: Uuid = uuid!("dc886566-984a-4798-a75e-5585a7bf67cc");
 
 /// OVMF Structure
+#[derive(Debug)]
 pub struct OVMF {
     /// OVMF data
     data: Vec<u8>,

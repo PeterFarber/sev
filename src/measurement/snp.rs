@@ -14,9 +14,12 @@ use crate::{
     },
 };
 use hex::FromHex;
+use openssl::sha::sha256;
 use serde::{Deserialize, Serialize};
 use std::convert::{TryFrom, TryInto};
 use std::path::PathBuf;
+
+use super::sev_hashes::Sha256Hash;
 
 const _PAGE_MASK: u64 = 0xfff;
 
@@ -133,6 +136,7 @@ fn snp_update_metadata_pages(
     vmm_type: VMMType,
 ) -> Result<(), MeasurementError> {
     for desc in ovmf.metadata_items().iter() {
+        print!("Metadata Item: {:?}", desc);
         snp_update_section(desc, gctx, ovmf, sev_hashes, vmm_type)?;
     }
 
@@ -171,7 +175,7 @@ pub struct SnpMeasurementArgs<'a> {
     /// vcpu type
     pub vcpu_type: CpuType,
     /// Path to OVMF file
-    pub ovmf_file: PathBuf,
+    pub ovmf_file: Option<PathBuf>,
     /// Active kernel guest features
     pub guest_features: GuestFeatures,
     /// Path to kernel file
@@ -180,18 +184,31 @@ pub struct SnpMeasurementArgs<'a> {
     pub initrd_file: Option<PathBuf>,
     /// Append arguments for kernel
     pub append: Option<&'a str>,
+    /// Precomputed kernel hash (optional)
+    pub kernel_hash: Option<Sha256Hash>,
+    /// Precomputed initrd hash (optional)
+    pub initrd_hash: Option<Sha256Hash>,
+    /// Precomputed append hash (optional)
+    pub append_hash: Option<Sha256Hash>,
     /// Already calculated ovmf hash
     pub ovmf_hash_str: Option<&'a str>,
     /// vmm type
     pub vmm_type: Option<VMMType>,
 }
 
-/// Calulate an SEV-SNP launch digest
+
+/// Calculate an SEV-SNP launch digest with optional precomputed hashes
 pub fn snp_calc_launch_digest(
     snp_measurement: SnpMeasurementArgs,
 ) -> Result<SnpLaunchDigest, MeasurementError> {
-    let ovmf = OVMF::new(snp_measurement.ovmf_file)?;
+    let ovmf = if let Some(ovmf_file) = &snp_measurement.ovmf_file {
+        // Load OVMF if provided
+        Some(OVMF::new(ovmf_file.clone())?)
+    } else {
+        None
+    };
 
+    // Initialize Gctx
     let mut gctx: Gctx<Updating> = match snp_measurement.ovmf_hash_str {
         Some(hash) => {
             let ovmf_hash = Vec::from_hex(hash)?;
@@ -200,41 +217,67 @@ pub fn snp_calc_launch_digest(
         None => {
             let mut gctx = Gctx::default();
 
-            gctx.update_page(PageType::Normal, ovmf.gpa(), Some(ovmf.data()), None)?;
+            // Update with OVMF data if OVMF is available
+            if let Some(ovmf) = &ovmf {
+                gctx.update_page(PageType::Normal, ovmf.gpa(), Some(ovmf.data()), None)?;
+            }
 
             gctx
         }
     };
 
-    let sev_hashes = match snp_measurement.kernel_file {
-        Some(kernel) => Some(SevHashes::new(
-            kernel,
+    let sev_hashes = if let Some(kernel_hash) = snp_measurement.kernel_hash {
+        // Use precomputed hashes
+        Some(SevHashes::new_with_hashes(
+            kernel_hash,
+            snp_measurement.initrd_hash.unwrap_or_else(|| sha256(&[])),
+            snp_measurement.append_hash.unwrap_or_else(|| sha256(b"\x00")),
+        )?)
+    } else if let Some(kernel_file) = snp_measurement.kernel_file {
+        // Fall back to calculating hashes from files
+        Some(SevHashes::new(
+            kernel_file,
             snp_measurement.initrd_file,
             snp_measurement.append,
-        )?),
-        None => None,
+        )?)
+    } else {
+        None
     };
 
-    let official_vmm_type = match snp_measurement.vmm_type {
-        Some(vmm) => vmm,
-        None => VMMType::QEMU,
-    };
+    // Determine the VMM type
+    let official_vmm_type = snp_measurement.vmm_type.unwrap_or(VMMType::QEMU);
 
-    snp_update_metadata_pages(&mut gctx, &ovmf, sev_hashes.as_ref(), official_vmm_type)?;
+    // Update metadata pages
+    if let Some(ovmf) = &ovmf {
+        snp_update_metadata_pages(&mut gctx, ovmf, sev_hashes.as_ref(), official_vmm_type)?;
+    }
 
+    // Print the contents of ovmf
+    if let Some(ovmf) = &ovmf {
+        // println!("OVMF: {:?}", ovmf);
+    }
+
+
+    // Create the VMSA structure
     let vmsa = VMSA::new(
-        ovmf.sev_es_reset_eip()?.into(),
+        if let Some(ovmf) = &ovmf {
+            ovmf.sev_es_reset_eip()?.into()
+        } else {
+            // Provide a default EIP value if OVMF is not available
+            0x0
+        },
         snp_measurement.vcpu_type,
         official_vmm_type,
         Some(snp_measurement.vcpus as u64),
         snp_measurement.guest_features,
     );
 
+    // Update VMSA pages
     for vmsa_page in vmsa.pages(snp_measurement.vcpus as usize)?.iter() {
-        gctx.update_page(PageType::Vmsa, VMSA_GPA, Some(vmsa_page.as_slice()), None)?
+        gctx.update_page(PageType::Vmsa, VMSA_GPA, Some(vmsa_page.as_slice()), None)?;
     }
 
+    // Finalize Gctx and return the launch digest
     let gctx = gctx.finished();
-
     Ok(gctx.ld())
 }
