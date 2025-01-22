@@ -136,7 +136,6 @@ fn snp_update_metadata_pages(
     vmm_type: VMMType,
 ) -> Result<(), MeasurementError> {
     for desc in ovmf.metadata_items().iter() {
-        print!("Metadata Item: {:?}", desc);
         snp_update_section(desc, gctx, ovmf, sev_hashes, vmm_type)?;
     }
 
@@ -251,12 +250,6 @@ pub fn snp_calc_launch_digest(
     if let Some(ovmf) = &ovmf {
         snp_update_metadata_pages(&mut gctx, ovmf, sev_hashes.as_ref(), official_vmm_type)?;
     }
-
-    // Print the contents of ovmf
-    if let Some(ovmf) = &ovmf {
-        // println!("OVMF: {:?}", ovmf);
-    }
-
 
     // Create the VMSA structure
     let vmsa = VMSA::new(
