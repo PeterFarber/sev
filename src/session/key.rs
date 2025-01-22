@@ -8,10 +8,11 @@ use std::{
     ptr::write_volatile,
 };
 
-use rdrand::{ErrorCode, RdRand};
-
 use openssl::*;
 
+use rand::RngCore;
+
+/// A secure key that wipes its memory on drop
 #[repr(transparent)]
 pub struct Key(Vec<u8>);
 
@@ -57,21 +58,14 @@ impl Key {
         Key(vec![0u8; size])
     }
 
-    /// Will attempt to create a random Key derived from the CPU RDRAND instruction.
-    pub fn random(size: usize) -> std::result::Result<Self, ErrorCode> {
-        // Create a new empty key to store the pseudo-random bytes in.
+    /// Creates a random key using a secure random number generator
+    pub fn random(size: usize) -> std::result::Result<Self, String> {
+        // Create a new empty key to store the random bytes
         let mut key = Key::zeroed(size);
 
-        // Instantiate a pseudo-random number generator instance to pull
-        // random data from the CPU RDRAND instruction set.
-        let mut rng = RdRand::new()?;
+        // Generate random bytes
+        rand::thread_rng().fill_bytes(&mut key.0);
 
-        // Attempt to generate N-number of bytes specified by the `size`
-        // parameter, storing the bytes inside they key generated at the
-        // start of the method.
-        rng.try_fill_bytes(&mut key)?;
-
-        // Return the key when successful.
         Ok(key)
     }
 }

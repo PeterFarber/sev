@@ -11,9 +11,9 @@ use super::*;
 
 use std::io::{Error, ErrorKind, Result};
 
-use rdrand::{ErrorCode, RdRand};
-
 use openssl::*;
+
+use rand::RngCore;
 
 /// Represents a brand-new secure channel with the AMD SP.
 pub struct Initialized;
@@ -47,12 +47,12 @@ impl launch::sev::Policy {
 }
 
 impl std::convert::TryFrom<launch::sev::Policy> for Session<Initialized> {
-    type Error = ErrorCode;
+    type Error = String;
 
     fn try_from(value: launch::sev::Policy) -> std::result::Result<Self, Self::Error> {
         Ok(Self {
-            tek: key::Key::random(16)?,
-            tik: key::Key::random(16)?,
+            tek: key::Key::random(16).map_err(|e| e.to_string())?,
+            tik: key::Key::random(16).map_err(|e| e.to_string())?,
             data: Initialized,
             policy: value,
         })
@@ -105,10 +105,8 @@ impl Session<Initialized> {
         let mut nonce = [0u8; 16];
         let mut iv = [0u8; 16];
 
-        let mut rng: RdRand = RdRand::new()?;
-
-        rng.try_fill_bytes(&mut nonce)?;
-        rng.try_fill_bytes(&mut iv)?;
+        rand::thread_rng().fill_bytes(&mut nonce);
+        rand::thread_rng().fill_bytes(&mut iv);
 
         Ok(launch::sev::Start {
             policy: self.policy,
@@ -129,10 +127,8 @@ impl Session<Initialized> {
         let mut nonce = [0u8; 16];
         let mut iv = [0u8; 16];
 
-        let mut rng: RdRand = RdRand::new()?;
-
-        rng.try_fill_bytes(&mut nonce)?;
-        rng.try_fill_bytes(&mut iv)?;
+        rand::thread_rng().fill_bytes(&mut nonce);
+        rand::thread_rng().fill_bytes(&mut iv);
 
         Ok(launch::sev::Start {
             policy: self.policy,
@@ -249,17 +245,18 @@ impl Session<Verified> {
         flags: launch::sev::HeaderFlags,
         data: &[u8],
     ) -> std::result::Result<launch::sev::Secret, SessionError> {
+        // Generate a random initialization vector (IV)
         let mut iv = [0u8; 16];
+        rand::thread_rng().fill_bytes(&mut iv);
 
-        let mut rng: RdRand = RdRand::new()?;
-
-        rng.try_fill_bytes(&mut iv)?;
-
+        // Encrypt the data using AES-128-CTR with the generated IV
         let ciphertext = symm::encrypt(symm::Cipher::aes_128_ctr(), &self.tek, Some(&iv), data)?;
 
+        // Create HMAC for integrity verification
         let key = pkey::PKey::hmac(&self.tik)?;
         let mut sig = sign::Signer::new(hash::MessageDigest::sha256(), &key)?;
 
+        // Update the HMAC with the necessary fields
         sig.update(&[0x01u8])?;
         sig.update(&unsafe { std::mem::transmute::<launch::sev::HeaderFlags, [u8; 4]>(flags) })?;
         sig.update(&iv)?;
@@ -268,9 +265,11 @@ impl Session<Verified> {
         sig.update(&ciphertext)?;
         sig.update(&self.data.0.measure)?;
 
+        // Finalize the HMAC calculation
         let mut mac = [0u8; 32];
         sig.sign(&mut mac)?;
 
+        // Return the constructed secret packet
         Ok(launch::sev::Secret {
             header: launch::sev::Header { flags, iv, mac },
             ciphertext,

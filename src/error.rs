@@ -11,8 +11,7 @@ use std::{
     io,
 };
 
-#[cfg(feature = "openssl")]
-use rdrand::ErrorCode;
+
 
 use std::os::raw::c_int;
 
@@ -1087,21 +1086,14 @@ impl std::convert::From<LargeArrayError> for MeasurementError {
 #[derive(Debug)]
 /// Used to describe errors related to SEV-ES "Sessions".
 pub enum SessionError {
-    /// Errors which occur from using the rdrand crate.
-    RandError(ErrorCode),
+    /// Errors which occur from generating random numbers.
+    RandError(String),
 
     /// OpenSSL Error Stack
     OpenSSLStack(ErrorStack),
 
-    /// Errors occuring from IO operations.
+    /// Errors occurring from IO operations.
     IOError(std::io::Error),
-}
-
-#[cfg(feature = "openssl")]
-impl From<ErrorCode> for SessionError {
-    fn from(value: ErrorCode) -> Self {
-        Self::RandError(value)
-    }
 }
 
 #[cfg(feature = "openssl")]
@@ -1116,4 +1108,12 @@ impl From<ErrorStack> for SessionError {
     fn from(value: ErrorStack) -> Self {
         Self::OpenSSLStack(value)
     }
+}
+
+// Add a helper function for generating random numbers.
+#[cfg(feature = "openssl")]
+fn generate_random_u64() -> Result<u64, SessionError> {
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    Ok(rng.gen())
 }
