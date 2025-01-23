@@ -145,8 +145,9 @@ pub struct AttestationReport {
     pub plat_info: PlatformInfo,
     /// Private variable as only the first bit is important.
     /// See [author_key_en()](self::AttestationReport::author_key_en).
-    _author_key_en: u32,
-    _reserved_0: u32,
+    pub _author_key_en: u32,
+    /// Reserved, must be zero
+    pub _reserved_0: u32,
     #[serde(with = "BigArray")]
     /// Guest-provided 512 Bits of Data
     pub report_data: [u8; 64],
@@ -169,7 +170,8 @@ pub struct AttestationReport {
     pub report_id_ma: [u8; 32],
     /// Reported TCB version used to derive the VCEK that signed this report.
     pub reported_tcb: TcbVersion,
-    _reserved_1: [u8; 24],
+    /// Reserved, must be zero
+    pub _reserved_1: [u8; 24],
     #[serde(with = "BigArray")]
     /// If MaskChipId is set to 0, Identifier unique to the chip.
     /// Otherwise set to 0h.
@@ -182,18 +184,21 @@ pub struct AttestationReport {
     pub current_minor: u8,
     /// The major number of CurrentVersion
     pub current_major: u8,
-    _reserved_2: u8,
+    /// Reserved, must be zero
+    pub _reserved_2: u8,
     /// The build number of CommittedVersion
     pub committed_build: u8,
     /// The minor number of CommittedVersion
     pub committed_minor: u8,
     /// The major number of CommittedVersion
     pub committed_major: u8,
-    _reserved_3: u8,
+    /// Reserved, must be zero
+    pub _reserved_3: u8,
     /// The CurrentTcb at the time the guest was launched or imported.
     pub launch_tcb: TcbVersion,
     #[serde(with = "BigArray")]
-    _reserved_4: [u8; 168],
+    /// Reserved, must be zero
+    pub _reserved_4: [u8; 168],
     /// Signature of bytes 0 to 0x29F inclusive of this report.
     /// The format of the signature is found within Signature.
     pub signature: Signature,
@@ -496,7 +501,7 @@ bitfield! {
     /// Indicates that ciphertext hiding is enabled
     pub ciphertext_hiding_enabled, _: 4, 4;
     /// reserved
-    reserved, _: 5, 63;
+    pub reserved, _: 5, 63;
 }
 
 impl Display for PlatformInfo {

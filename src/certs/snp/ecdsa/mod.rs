@@ -25,11 +25,15 @@ const R_S_SIZE: usize = SIG_PIECE_SIZE * 2usize;
 /// ECDSA signature.
 pub struct Signature {
     #[serde(with = "BigArray")]
-    r: [u8; 72],
+    /// Reserved space for future use.
+    /// The `r` component of the ECDSA signature.
+    pub r: [u8; 72],
     #[serde(with = "BigArray")]
-    s: [u8; 72],
+    /// The `s` component of the ECDSA signature.
+    pub s: [u8; 72],
     #[serde(with = "BigArray")]
-    _reserved: [u8; 512 - R_S_SIZE],
+    /// Reserved space for future use.
+    pub _reserved: [u8; 512 - R_S_SIZE],
 }
 
 impl Signature {
