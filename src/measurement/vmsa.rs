@@ -420,6 +420,56 @@ impl VMSA {
                 None => None,
             };
 
+        // Debug: print key VMSA fields for BSP (to compare with C output)
+        eprintln!("[SNP_DEBUG] Rust VMSA page (BSP) key fields:");
+        eprint!("  CS base (0x18-0x1F): ");
+        for j in 0x18..=0x1F {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        eprint!("  EFER (0xD0-0xD7): ");
+        for j in 0xD0..=0xD7 {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        eprint!("  CR4 (0x148-0x14F): ");
+        for j in 0x148..=0x14F {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        eprint!("  RIP (0x178-0x17F): ");
+        for j in 0x178..=0x17F {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        eprint!("  RDX (0x318-0x31F): ");
+        for j in 0x318..=0x31F {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        eprint!("  SEV Features (0x3E8-0x3EF): ");
+        for j in 0x3E8..=0x3EF {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        eprint!("  MXCSR (0x3FC-0x3FF): ");
+        for j in 0x3FC..=0x3FF {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        eprint!("  X87 FCW (0x402-0x403): ");
+        for j in 0x402..=0x403 {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+        
+        // Debug: print full VMSA page (all bytes for comparison)
+        eprint!("[SNP_DEBUG] Rust VMSA page (BSP, full {} bytes): ", bsp_page.len());
+        for j in 0..bsp_page.len() {
+            eprint!("{:02x}", bsp_page[j]);
+        }
+        eprintln!();
+
         let mut pages = Vec::new();
 
         for i in 0..vcpus {
