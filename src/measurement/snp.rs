@@ -213,21 +213,21 @@ pub fn snp_calc_launch_digest(
             let ovmf_hash = Vec::from_hex(hash)?;
             let gctx = Gctx::new(ovmf_hash.as_slice())?;
             eprintln!("[SNP_DEBUG] Rust: GCTX initialized with firmware hash");
-            eprintln!("[SNP_DEBUG] Rust: LD after GCTX init: {}", hex_encode(gctx.ld));
+            eprintln!("[SNP_DEBUG] Rust: LD after GCTX init: {}", hex_encode(gctx.ld.0.as_slice()));
             gctx
         }
         None => {
             let mut gctx = Gctx::default();
             eprintln!("[SNP_DEBUG] Rust: GCTX initialized with zeros");
-            eprintln!("[SNP_DEBUG] Rust: LD after GCTX init: {}", hex_encode(gctx.ld));
+            eprintln!("[SNP_DEBUG] Rust: LD after GCTX init: {}", hex_encode(gctx.ld.0.as_slice()));
 
             // Update with OVMF data if OVMF is available
             if let Some(ovmf) = &ovmf {
                 eprintln!("[SNP_DEBUG] Rust: Updating GCTX with full OVMF data");
                 eprintln!("[SNP_DEBUG] Rust:   OVMF size: {}, GPA: {}", ovmf.data().len(), ovmf.gpa());
-                eprintln!("[SNP_DEBUG] Rust:   LD before OVMF data update: {}", hex_encode(gctx.ld));
+                eprintln!("[SNP_DEBUG] Rust:   LD before OVMF data update: {}", hex_encode(gctx.ld.0.as_slice()));
                 gctx.update_page(PageType::Normal, ovmf.gpa(), Some(ovmf.data()), None)?;
-                eprintln!("[SNP_DEBUG] Rust:   LD after OVMF data update: {}", hex_encode(gctx.ld));
+                eprintln!("[SNP_DEBUG] Rust:   LD after OVMF data update: {}", hex_encode(gctx.ld.0.as_slice()));
             }
 
             gctx
@@ -259,7 +259,7 @@ pub fn snp_calc_launch_digest(
     if let Some(ovmf) = &ovmf {
         snp_update_metadata_pages(&mut gctx, ovmf, sev_hashes.as_ref(), official_vmm_type)?;
     }
-    eprintln!("[SNP_DEBUG] Rust: LD after OVMF metadata parsing: {}", hex_encode(gctx.ld));
+    eprintln!("[SNP_DEBUG] Rust: LD after OVMF metadata parsing: {}", hex_encode(gctx.ld.0.as_slice()));
 
     // Create the VMSA structure
     let vmsa = VMSA::new(
@@ -277,21 +277,21 @@ pub fn snp_calc_launch_digest(
 
     // Update VMSA pages
     eprintln!("[SNP_DEBUG] Rust: Starting VMSA page updates, vcpus={}", snp_measurement.vcpus);
-    eprintln!("[SNP_DEBUG] Rust: LD before VMSA updates: {}", hex_encode(gctx.ld));
+    eprintln!("[SNP_DEBUG] Rust: LD before VMSA updates: {}", hex_encode(gctx.ld.0.as_slice()));
     let vmsa_pages = vmsa.pages(snp_measurement.vcpus as usize)?;
     for (i, vmsa_page) in vmsa_pages.iter().enumerate() {
         let vmsa_type = if i == 0 { "BSP" } else { "AP" };
         let vmsa_hash = sha384(vmsa_page.as_slice());
         eprintln!("[SNP_DEBUG] Rust: Updating VMSA page {} ({}):", i, vmsa_type);
         eprintln!("[SNP_DEBUG] Rust:   VMSA hash (SHA-384): {}", hex_encode(vmsa_hash.as_slice()));
-        eprintln!("[SNP_DEBUG] Rust:   LD before this VMSA update: {}", hex_encode(gctx.ld));
+        eprintln!("[SNP_DEBUG] Rust:   LD before this VMSA update: {}", hex_encode(gctx.ld.0.as_slice()));
         gctx.update_page(PageType::Vmsa, VMSA_GPA, Some(vmsa_page.as_slice()), None)?;
-        eprintln!("[SNP_DEBUG] Rust:   LD after this VMSA update:  {}", hex_encode(gctx.ld));
+        eprintln!("[SNP_DEBUG] Rust:   LD after this VMSA update:  {}", hex_encode(gctx.ld.0.as_slice()));
     }
-    eprintln!("[SNP_DEBUG] Rust: LD after all VMSA updates: {}", hex_encode(gctx.ld));
+    eprintln!("[SNP_DEBUG] Rust: LD after all VMSA updates: {}", hex_encode(gctx.ld.0.as_slice()));
 
     // Finalize Gctx and return the launch digest
     let gctx = gctx.finished();
-    eprintln!("[SNP_DEBUG] Rust: Final launch digest: {}", hex_encode(gctx.ld()));
+    eprintln!("[SNP_DEBUG] Rust: Final launch digest: {}", hex_encode(gctx.ld().0.as_slice()));
     Ok(gctx.ld())
 }
