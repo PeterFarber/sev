@@ -83,6 +83,12 @@ fn snp_update_kernel_hashes(
             let page_offset = sev_hashes_table_gpa & _PAGE_MASK;
             let sev_hashes_page = hash.construct_page(page_offset as usize)?;
             assert_eq!(sev_hashes_page.len(), size);
+            
+            // Debug: print the full SEV hashes page bytes
+            eprintln!("[SNP_DEBUG] Rust: SEV hashes page (full 4096 bytes): {}", hex_encode(&sev_hashes_page));
+            eprintln!("[SNP_DEBUG] Rust: SEV hashes page offset: {}", page_offset);
+            eprintln!("[SNP_DEBUG] Rust: SEV hashes page SHA-384: {}", hex_encode(sha384(&sev_hashes_page).as_slice()));
+            
             gctx.update_page(
                 PageType::Normal,
                 gpa,
