@@ -104,6 +104,18 @@ fn snp_update_section(
     sev_hashes: Option<&SevHashes>,
     vmm_type: VMMType,
 ) -> Result<(), MeasurementError> {
+    let ld_before = hex::encode(gctx.ld.as_slice());
+    let section_name = match desc.section_type {
+        SectionType::SnpSecMemory => "SnpSecMemory",
+        SectionType::SnpSecrets => "SnpSecrets",
+        SectionType::Cpuid => "Cpuid",
+        SectionType::SnpKernelHashes => "SnpKernelHashes",
+        SectionType::SvsmCaa => "SvsmCaa",
+    };
+    eprintln!("[SNP_DEBUG] Rust: Processing section {} (type {:?}), GPA 0x{:08X}, size {}", 
+              section_name, desc.section_type, desc.gpa, desc.size);
+    eprintln!("[SNP_DEBUG] Rust:   LD before section: {}", ld_before);
+
     match desc.section_type {
         SectionType::SnpSecMemory => gctx.update_page(
             PageType::Zero,
@@ -129,6 +141,10 @@ fn snp_update_section(
             Some(desc.size as usize),
         )?,
     }
+
+    let ld_after = hex::encode(gctx.ld.as_slice());
+    eprintln!("[SNP_DEBUG] Rust:   LD after section:  {}", ld_after);
+    eprintln!();
 
     Ok(())
 }
