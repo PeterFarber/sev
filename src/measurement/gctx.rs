@@ -71,7 +71,7 @@ impl Gctx<Updating> {
 
         // Log LD before update for VMSA pages
         let ld_before = if page_type == 2 { // PageType::Vmsa
-            Some(hex::encode(self.ld.0.as_slice()))
+            Some(hex::encode(self.ld.as_slice()))
         } else {
             None
         };
@@ -102,7 +102,7 @@ impl Gctx<Updating> {
         if page_type == 2 { // PageType::Vmsa
             eprintln!("[SNP_DEBUG] Rust GCTX update (VMSA):");
             eprintln!("  LD before: {}", ld_before.as_ref().unwrap());
-            eprintln!("  LD after:  {}", hex::encode(self.ld.0.as_slice()));
+            eprintln!("  LD after:  {}", hex::encode(self.ld.as_slice()));
             eprintln!("  Page info (112 bytes): {}", hex::encode(&page_info));
             eprintln!("  Contents hash (48 bytes): {}", hex::encode(&contents[..48.min(contents.len())]));
         }
