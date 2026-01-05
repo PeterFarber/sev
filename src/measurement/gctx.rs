@@ -2,6 +2,7 @@
 //! Operations to handle and create a Guest Context
 use std::convert::TryInto;
 
+use hex;
 use openssl::sha::sha384;
 
 use crate::error::*;
@@ -68,6 +69,13 @@ impl Gctx<Updating> {
         let vmpl2_perms: u8 = 0;
         let vmpl1_perms: u8 = 0;
 
+        // Log LD before update for VMSA pages
+        let ld_before = if page_type == 2 { // PageType::Vmsa
+            Some(hex::encode(&self.ld))
+        } else {
+            None
+        };
+
         let mut page_info: Vec<u8> = self.ld.try_into()?;
         page_info.extend_from_slice(contents);
 
@@ -89,6 +97,15 @@ impl Gctx<Updating> {
             ))?;
         }
         self.ld = sha384(&page_info).as_slice().try_into()?;
+
+        // Log VMSA page update details
+        if page_type == 2 { // PageType::Vmsa
+            eprintln!("[SNP_DEBUG] Rust GCTX update (VMSA):");
+            eprintln!("  LD before: {}", ld_before.as_ref().unwrap());
+            eprintln!("  LD after:  {}", hex::encode(&self.ld));
+            eprintln!("  Page info (112 bytes): {}", hex::encode(&page_info));
+            eprintln!("  Contents hash (48 bytes): {}", hex::encode(&contents[..48.min(contents.len())]));
+        }
 
         Ok(())
     }
