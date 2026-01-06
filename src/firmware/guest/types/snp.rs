@@ -372,6 +372,14 @@ impl Verifiable for (&Chain, &AttestationReport) {
         eprintln!("[RUST-VCEK] vcek_pubkey_der_size: {}", vcek_pubkey_bytes.len());
         eprintln!("[RUST-VCEK] vcek_pubkey_der_first_8_hex: {}", 
             vcek_pubkey_bytes.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
+        // Extract SEC1 format (uncompressed point) for comparison with Erlang
+        use openssl::ec::PointConversionForm;
+        let vcek_pubkey_sec1 = vcek_ec_key.public_key_to_bytes(PointConversionForm::UNCOMPRESSED)?;
+        eprintln!("[RUST-VCEK] vcek_pubkey_sec1_size: {}", vcek_pubkey_sec1.len());
+        eprintln!("[RUST-VCEK] vcek_pubkey_sec1_first_8_hex: {}", 
+            vcek_pubkey_sec1.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
+        eprintln!("[RUST-VCEK] vcek_pubkey_sec1_full_hex: {}", 
+            vcek_pubkey_sec1.iter().map(|b| format!("{:02x}", b)).collect::<String>());
 
         let signed = sig.verify(&base_digest, &vcek_ec_key)?;
         
@@ -455,6 +463,8 @@ impl Verifiable for (&Chain, &AttestationReport) {
         eprintln!("[RUST-VCEK] vcek_pubkey_sec1_size: {}", vcek_pubkey_sec1.len());
         eprintln!("[RUST-VCEK] vcek_pubkey_sec1_first_8_hex: {}", 
             vcek_pubkey_sec1.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
+        eprintln!("[RUST-VCEK] vcek_pubkey_sec1_full_hex: {}", 
+            vcek_pubkey_sec1.iter().map(|b| format!("{:02x}", b)).collect::<String>());
 
         let verifying_key = p384::ecdsa::VerifyingKey::from_sec1_bytes(vcek_pubkey_sec1)
             .map_err(|e| {
