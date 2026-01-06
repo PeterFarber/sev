@@ -363,7 +363,10 @@ impl Verifiable for (&Chain, &AttestationReport) {
         // and the signature hash algorithm is sha384.
         // [spec]: https://www.amd.com/content/dam/amd/en/documents/epyc-technical-docs/specifications/57230.pdf
 
+        eprintln!("[RUST-VCEK] Entering Verifiable::verify for (&Chain, &AttestationReport)");
+        eprintln!("[RUST-VCEK] Verifying certificate chain first...");
         let vcek = self.0.verify()?;
+        eprintln!("[RUST-VCEK] Certificate chain verified, got VCEK");
 
         let sig = p384::ecdsa::Signature::try_from(&self.1.signature)?;
 
