@@ -367,17 +367,55 @@ impl Verifiable for (&Chain, &AttestationReport) {
 
         let sig = p384::ecdsa::Signature::try_from(&self.1.signature)?;
 
-        let measurable_bytes: &[u8] = &bincode::serialize(self.1).map_err(|e| {
+        let serialized = bincode::serialize(self.1).map_err(|e| {
             Error::new(
                 ErrorKind::Other,
                 format!("Unable to serialize bytes: {}", e),
             )
-        })?[..0x2a0];
+        })?;
+        
+        let measurable_bytes: &[u8] = &serialized[..0x2a0];
+        
+        // Log measurable bytes for comparison with Erlang
+        println!("[RUST-VCEK] measurable_bytes_size: {}", measurable_bytes.len());
+        println!("[RUST-VCEK] measurable_bytes_first_8_hex: {}", 
+            measurable_bytes.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
+        println!("[RUST-VCEK] measurable_bytes_last_8_hex: {}", 
+            measurable_bytes.iter().rev().take(8).rev().map(|b| format!("{:02x}", b)).collect::<String>());
+        println!("[RUST-VCEK] measurable_bytes_full_hex: {}", 
+            measurable_bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
+        
+        // Log signature values (as they appear in the struct, before processing)
+        println!("[RUST-VCEK] signature_r_first_8_hex: {}", 
+            self.1.signature.r.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
+        println!("[RUST-VCEK] signature_s_first_8_hex: {}", 
+            self.1.signature.s.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
+        
+        // Log signature values after processing (reversed, first 48 bytes)
+        let sig_r_bytes: Vec<u8> = self.1.signature.r.iter().copied().take(48).rev().collect();
+        let sig_s_bytes: Vec<u8> = self.1.signature.s.iter().copied().take(48).rev().collect();
+        println!("[RUST-VCEK] signature_r_hex: {}", 
+            sig_r_bytes.iter().map(|b| format!("{:02X}", b)).collect::<String>());
+        println!("[RUST-VCEK] signature_s_hex: {}", 
+            sig_s_bytes.iter().map(|b| format!("{:02X}", b)).collect::<String>());
 
         use sha2::Digest;
         let base_digest = sha2::Sha384::new_with_prefix(measurable_bytes);
+        
+        // Log hash for comparison (compute it separately for logging)
+        let mut hasher_for_log = sha2::Sha384::new();
+        hasher_for_log.update(measurable_bytes);
+        let hash_bytes = hasher_for_log.finalize();
+        println!("[RUST-VCEK] hash_hex: {}", 
+            hash_bytes.iter().map(|b| format!("{:02x}", b)).collect::<String>());
+        
+        // Log public key
+        let vcek_pubkey_sec1 = vcek.public_key_sec1();
+        println!("[RUST-VCEK] vcek_pubkey_sec1_size: {}", vcek_pubkey_sec1.len());
+        println!("[RUST-VCEK] vcek_pubkey_sec1_first_8_hex: {}", 
+            vcek_pubkey_sec1.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
 
-        let verifying_key = p384::ecdsa::VerifyingKey::from_sec1_bytes(vcek.public_key_sec1())
+        let verifying_key = p384::ecdsa::VerifyingKey::from_sec1_bytes(vcek_pubkey_sec1)
             .map_err(|e| {
                 io::Error::new(
                     ErrorKind::Other,
@@ -386,7 +424,12 @@ impl Verifiable for (&Chain, &AttestationReport) {
             })?;
 
         use p384::ecdsa::signature::DigestVerifier;
-        verifying_key.verify_digest(base_digest, &sig).map_err(|e| {
+        let verify_result = verifying_key.verify_digest(base_digest, &sig);
+        match &verify_result {
+            Ok(_) => println!("[RUST-VCEK] signature_verification: SUCCESS"),
+            Err(e) => println!("[RUST-VCEK] signature_verification: FAILED - {:?}", e),
+        }
+        verify_result.map_err(|e| {
             io::Error::new(
                 ErrorKind::Other,
                 format!("VCEK does not sign the attestation report: {e:?}"),
