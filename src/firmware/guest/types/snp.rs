@@ -373,10 +373,12 @@ impl Verifiable for (&Chain, &AttestationReport) {
         eprintln!("[RUST-VCEK] vcek_pubkey_der_first_8_hex: {}", 
             vcek_pubkey_bytes.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
         // Extract SEC1 format (uncompressed point) for comparison with Erlang
-        use openssl::ec::PointConversionForm;
+        use openssl::ec::{PointConversionForm, EcPoint};
+        use openssl::bn::BigNumContext;
         let vcek_pubkey_point = vcek_ec_key.public_key();
         let vcek_group = vcek_ec_key.group();
-        let vcek_pubkey_sec1 = vcek_pubkey_point.to_bytes(vcek_group, PointConversionForm::UNCOMPRESSED)?;
+        let mut ctx = BigNumContext::new()?;
+        let vcek_pubkey_sec1 = vcek_pubkey_point.to_bytes(vcek_group, PointConversionForm::UNCOMPRESSED, &mut ctx)?;
         eprintln!("[RUST-VCEK] vcek_pubkey_sec1_size: {}", vcek_pubkey_sec1.len());
         eprintln!("[RUST-VCEK] vcek_pubkey_sec1_first_8_hex: {}", 
             vcek_pubkey_sec1.iter().take(8).map(|b| format!("{:02x}", b)).collect::<String>());
